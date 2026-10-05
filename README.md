@@ -6,13 +6,15 @@
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
 A REST API for managing a car dealer's vehicle inventory, built with Spring Boot and PostgreSQL and run with Docker Compose. It's a learning project that models the kind of data I handle at work (vehicle listings), using sample data only.
+
 ## Tech stack
 
-- Java 21, Spring Boot 4.1.1 (Spring Web, Spring Data JPA)
-- PostgreSQL 17
+- Java 21, Spring Boot 4.1.1 (Spring Web, Spring Data JPA, Bean Validation)
+- PostgreSQL 17 with Flyway migrations
 - Maven
-- Docker and Docker Compose
-- JUnit 5 and Mockito for tests
+- Docker and Docker Compose, Caddy as reverse proxy
+- springdoc-openapi (Swagger UI) for API documentation
+- JUnit 5, Mockito and MockMvc for tests
 
 ## Run it
 
@@ -26,13 +28,23 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-  The API is then available at `https://localhost:8443`. Caddy uses a self-signed certificate locally, so use `curl -k` or accept the browser warning.
+Interactive documentation (Swagger UI) is available at `https://localhost:8443/swagger-ui/index.html` with Docker, or at `http://localhost:8080/swagger-ui/index.html` when the app runs from an IDE.
 
 ```bash
 curl -k https://localhost:8443/vehicles
 ```
 
 Stop it with `docker compose down`. The database data is kept in a Docker volume.
+
+## Development
+
+Run only the database in Docker and start the app from your IDE:
+
+```bash
+docker compose up -d db
+```
+
+The app then listens on `http://localhost:8080`.
 
 ## API
 
@@ -51,6 +63,27 @@ curl -k -X POST https://localhost:8443/vehicles \
   -H "Content-Type: application/json" \
   -d '{"brand":"Toyota","model":"Celica","year":1994,"km":41000,"price":11500}'
 ```
+
+### Documents
+
+Each vehicle has a checklist of documents (technical sheet, registration permit, ITV certificate, sales contract).
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/vehicles/{id}/documents` | List a vehicle's documents |
+| POST | `/vehicles/{id}/documents` | Add a document (409 if the type already exists) |
+| PUT | `/vehicles/{id}/documents/{docId}` | Update status and expiry date |
+| DELETE | `/vehicles/{id}/documents/{docId}` | Delete a document |
+
+Example request:
+
+```bash
+curl -k -X POST https://localhost:8443/vehicles/1/documents \
+  -H "Content-Type: application/json" \
+  -d '{"type":"ITV_CERTIFICATE","expiresOn":"2027-03-15"}'
+```
+
+Document status is `PENDING` or `RECEIVED`.
 
 ## Tests
 
@@ -93,9 +126,14 @@ Interactive documentation (Swagger UI) is available at `/swagger-ui/index.html` 
 ## Roadmap
 
 - [x] CRUD endpoints with input validation
+- [x] Vehicle document checklist
 - [x] Docker Compose setup
 - [x] Integration tests
 - [x] CI with GitHub Actions
 - [x] Database migrations (Flyway)
 - [x] Logging and database backups
+- [x] API documentation (Swagger UI)
+- [ ] Vehicle status and DTOs
+- [ ] Consistent JSON error responses
+- [ ] Tests with their own database (Testcontainers)
 - [ ] Deployment on a Linux server with a reverse proxy and HTTPS
