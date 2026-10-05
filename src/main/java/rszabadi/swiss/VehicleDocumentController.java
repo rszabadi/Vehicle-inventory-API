@@ -46,6 +46,10 @@ public class VehicleDocumentController {
     public DocumentResponse create(@PathVariable Long vehicleId,
             @Valid @RequestBody DocumentCreateRequest request) {
         Vehicle vehicle = requireVehicle(vehicleId);
+        if (documents.existsByVehicleIdAndType(vehicleId, request.type())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Document type already exists for this vehicle");
+        }
         VehicleDocument document = new VehicleDocument();
         document.setVehicle(vehicle);
         document.setType(request.type());
