@@ -65,7 +65,8 @@ The tests need the database running locally. CI runs them automatically on every
 
 - [x] CRUD endpoints with input validation
 - [x] Docker Compose setup
-- [ ] Integration tests
+- [x] Integration tests
 - [x] CI with GitHub Actions
+- [x] Database migrations (Flyway)
 - [ ] Logging and database backups
 - [ ] Deployment on a Linux server with a reverse proxy and HTTPS
