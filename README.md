@@ -52,14 +52,17 @@ curl -X POST localhost:8080/vehicles \
 ## Tests
 
 ```bash
+docker compose up -d db
 ./mvnw test
 ```
+
+The tests need the database running locally. CI runs them automatically on every push.
 
 ## Roadmap
 
 - [x] CRUD endpoints with input validation
 - [x] Docker Compose setup
 - [ ] Integration tests
-- [ ] CI with GitHub Actions
+- [x] CI with GitHub Actions
 - [ ] Logging and database backups
 - [ ] Deployment on a Linux server with a reverse proxy and HTTPS
