@@ -61,6 +61,18 @@ docker compose up -d db
 
 The tests need the database running locally. CI runs them automatically on every push.
 
+## Backups
+
+```bash
+./scripts/backup.sh
+```
+
+Writes a compressed SQL dump to `backups/` and deletes dumps older than 14 days. To restore, pipe a dump into `psql` on an **empty** database:
+
+```bash
+gunzip -c backups/<file>.sql.gz | docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
 ## Roadmap
 
 - [x] CRUD endpoints with input validation
@@ -68,5 +80,5 @@ The tests need the database running locally. CI runs them automatically on every
 - [x] Integration tests
 - [x] CI with GitHub Actions
 - [x] Database migrations (Flyway)
-- [ ] Logging and database backups
+- [x] Logging and database backups
 - [ ] Deployment on a Linux server with a reverse proxy and HTTPS
