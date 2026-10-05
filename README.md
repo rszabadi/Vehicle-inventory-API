@@ -84,6 +84,12 @@ flowchart LR
 
 Only Caddy is exposed to the host. The API and the database are reachable only inside the Docker network (and the database on localhost for development).
 
+## API documentation
+
+Interactive documentation (Swagger UI) is available at `/swagger-ui/index.html` when the app runs locally.
+
+![Swagger UI](docs/swagger-ui.png)
+
 ## Roadmap
 
 - [x] CRUD endpoints with input validation
