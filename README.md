@@ -1,7 +1,8 @@
 # Vehicle Inventory API
 
-A REST API for managing a car dealer's vehicle inventory, built with Spring Boot and PostgreSQL and run with Docker Compose. It's a learning project that models the kind of data I handle at work (vehicle listings), using sample data only.
+![CI](https://github.com/rszabadi/swiss/actions/workflows/ci.yml/badge.svg)
 
+A REST API for managing a car dealer's vehicle inventory, built with Spring Boot and PostgreSQL and run with Docker Compose. It's a learning project that models the kind of data I handle at work (vehicle listings), using sample data only.
 ## Tech stack
 
 - Java 21, Spring Boot 4.1.1 (Spring Web, Spring Data JPA)
