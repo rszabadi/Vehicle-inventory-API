@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.validation.Valid;
+
 @RestController
 public class VehicleController {
 
@@ -29,7 +31,7 @@ public class VehicleController {
     
     @PostMapping("/vehicles")
     @ResponseStatus(HttpStatus.CREATED)
-    public Vehicle create(@RequestBody Vehicle vehicle) {
+    public Vehicle create(@Valid @RequestBody Vehicle vehicle) {
         return repository.save(vehicle);
     }
 
@@ -40,7 +42,7 @@ public class VehicleController {
     }
     
     @PutMapping("/vehicles/{id}")
-    public Vehicle update(@PathVariable Long id, @RequestBody Vehicle updated) {
+    	public Vehicle update(@PathVariable Long id, @Valid @RequestBody Vehicle updated) {
         Vehicle vehicle = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         vehicle.setBrand(updated.getBrand());
