@@ -26,10 +26,10 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-The API is then available at `http://localhost:8080`.
+  The API is then available at `https://localhost:8443`. Caddy uses a self-signed certificate locally, so use `curl -k` or accept the browser warning.
 
 ```bash
-curl localhost:8080/vehicles
+curl -k https://localhost:8443/vehicles
 ```
 
 Stop it with `docker compose down`. The database data is kept in a Docker volume.
@@ -47,7 +47,7 @@ Stop it with `docker compose down`. The database data is kept in a Docker volume
 Example request:
 
 ```bash
-curl -X POST localhost:8080/vehicles \
+curl -k -X POST https://localhost:8443/vehicles \
   -H "Content-Type: application/json" \
   -d '{"brand":"Toyota","model":"Celica","year":1994,"km":41000,"price":11500}'
 ```
@@ -72,6 +72,17 @@ Writes a compressed SQL dump to `backups/` and deletes dumps older than 14 days.
 ```bash
 gunzip -c backups/<file>.sql.gz | docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 ```
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Client --> Caddy["Caddy (HTTPS reverse proxy)"]
+    Caddy --> App["Spring Boot API"]
+    App --> DB[("PostgreSQL")]
+```
+
+Only Caddy is exposed to the host. The API and the database are reachable only inside the Docker network (and the database on localhost for development).
 
 ## Roadmap
 

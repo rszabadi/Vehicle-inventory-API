@@ -1,10 +1,5 @@
 services:
   db:
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
     image: postgres:17
     restart: unless-stopped
     environment:
@@ -20,13 +15,13 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-
-  app:
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
+
+  app:
     build: .
     restart: unless-stopped
     depends_on:
@@ -36,8 +31,30 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   pgdata:
+  caddy_data:
+  caddy_config:
