@@ -58,4 +58,11 @@ class VehicleApiTest {
         mockMvc.perform(get("/vehicles/999999"))
                 .andExpect(status().isNotFound());
     }
+    @Test
+    void createIgnoresAnIdSentByTheClient() throws Exception {
+        mockMvc.perform(post("/vehicles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":123456,\"brand\":\"Dacia\",\"model\":\"Sandero\",\"year\":2020,\"km\":41000,\"price\":11500}"))
+                .andExpect(status().isCreated());
+    }
 }
