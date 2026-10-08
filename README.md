@@ -48,6 +48,13 @@ Caddy uses a self-signed certificate locally, so use `curl -k` or accept the bro
 
 Stop it with `docker compose down`. The database data is kept in a Docker volume.
 
+
+## Web interface
+
+A small front-end (plain HTML, CSS and JavaScript, no framework) is served by Caddy at `https://localhost:8443`. It lists vehicles with a status filter, adds, updates and deletes them, and manages each vehicle's document checklist.
+
+![Web interface](docs/frontend.png)
+
 ## API
 
 | Method | Path | Description |
@@ -154,5 +161,6 @@ Interactive documentation (Swagger UI) is available at `/swagger-ui/index.html` 
 - [x] API documentation (Swagger UI)
 - [x] Vehicle status and DTOs
 - [x] Consistent JSON error responses
+- [x] Small web front-end served by Caddy
 - [ ] Tests with their own database (Testcontainers)
 - [ ] Deployment on a Linux server with a reverse proxy and HTTPS

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vehicle Inventory</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>Vehicle Inventory</h1>
+    <a href="/swagger-ui/index.html">API docs</a>
+  </header>
+
+  <main>
+    <label>Status
+      <select id="filter">
+        <option value="">All</option>
+        <option>AVAILABLE</option>
+        <option>RESERVED</option>
+        <option>SOLD</option>
+      </select>
+    </label>
+
+    <p id="message" role="status"></p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Brand</th><th>Model</th><th>Year</th><th>Km</th>
+            <th>Price (€)</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="vehicles"></tbody>
+      </table>
+    </div>
+
+    <h2>Add a vehicle</h2>
+    <form id="add-form">
+      <input name="brand" placeholder="Brand" required>
+      <input name="model" placeholder="Model" required>
+      <input name="year" type="number" placeholder="Year" min="1950" required>
+      <input name="km" type="number" placeholder="Km" min="0" required>
+      <input name="price" type="number" placeholder="Price" min="1" required>
+      <button type="submit">Add</button>
+    </form>
+  </main>
+
+  <dialog id="docs-dialog">
+    <h2 id="docs-title"></h2>
+    <p id="docs-message" role="status"></p>
+    <ul id="docs-list"></ul>
+    <form id="doc-form">
+      <select name="type" id="doc-type"></select>
+      <input name="expiresOn" type="date">
+      <button type="submit">Add document</button>
+    </form>
+    <button id="docs-close" type="button">Close</button>
+  </dialog>
+</body>
+</html>

@@ -1,3 +1,15 @@
 localhost {
-    reverse_proxy app:8080
+    encode gzip
+
+    @api path /vehicles /vehicles/* /swagger-ui /swagger-ui/* /swagger-ui.html /v3/api-docs /v3/api-docs/*
+    handle @api {
+        reverse_proxy app:8080
+    }
+
+    handle {
+        header Content-Security-Policy "default-src 'self'; frame-ancestors 'none'"
+        header X-Content-Type-Options "nosniff"
+        root * /srv
+        file_server
+    }
 }
