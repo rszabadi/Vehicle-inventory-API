@@ -1,6 +1,6 @@
 # Vehicle Inventory API
 
-![CI](https://github.com/rszabadi/swiss/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/rszabadi/Vehicle-inventory-API/actions/workflows/ci.yml/badge.svg)
 ![Java](https://img.shields.io/badge/Java-21-orange)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 ![License](https://img.shields.io/badge/License-MIT-blue)
@@ -16,26 +16,6 @@ A REST API for managing a car dealer's vehicle inventory, built with Spring Boot
 - springdoc-openapi (Swagger UI) for API documentation
 - JUnit 5, Mockito and MockMvc for tests
 
-## Run it
-
-Requirements: Docker with the Compose plugin.
-
-```bash
-git clone https://github.com/rszabadi/swiss.git
-cd swiss
-cp .env.example .env
-# edit .env and set your own DB_PASSWORD
-docker compose up -d --build
-```
-
-Interactive documentation (Swagger UI) is available at `https://localhost:8443/swagger-ui/index.html` with Docker, or at `http://localhost:8080/swagger-ui/index.html` when the app runs from an IDE.
-
-```bash
-curl -k https://localhost:8443/vehicles
-```
-
-Stop it with `docker compose down`. The database data is kept in a Docker volume.
-
 ## Development
 
 Run only the database in Docker and start the app from your IDE:
@@ -46,11 +26,33 @@ docker compose up -d db
 
 The app then listens on `http://localhost:8080`.
 
+## Run it
+
+Requirements: Docker with the Compose plugin.
+
+```bash
+git clone https://github.com/rszabadi/Vehicle-inventory-API.git
+cd Vehicle-inventory-API
+cp .env.example .env
+# edit .env and set your own DB_PASSWORD
+docker compose up -d --build
+```
+
+Wait a few seconds for the app to start, then:
+
+```bash
+curl -k https://localhost:8443/vehicles
+```
+
+Caddy uses a self-signed certificate locally, so use `curl -k` or accept the browser warning. Interactive documentation (Swagger UI) is available at `https://localhost:8443/swagger-ui/index.html`.
+
+Stop it with `docker compose down`. The database data is kept in a Docker volume.
+
 ## API
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/vehicles` | List all vehicles |
+| GET | `/vehicles` | List vehicles (optional `?status=AVAILABLE`, `RESERVED` or `SOLD`) |
 | GET | `/vehicles/{id}` | Get one vehicle (404 if missing) |
 | POST | `/vehicles` | Create a vehicle (400 if invalid) |
 | PUT | `/vehicles/{id}` | Update a vehicle |
@@ -63,6 +65,8 @@ curl -k -X POST https://localhost:8443/vehicles \
   -H "Content-Type: application/json" \
   -d '{"brand":"Toyota","model":"Celica","year":1994,"km":41000,"price":11500}'
 ```
+
+A vehicle's status is `AVAILABLE` (the default), `RESERVED` or `SOLD`. Fields the API doesn't expect (such as `id`) are ignored on create.
 
 ### Documents
 
@@ -84,6 +88,7 @@ curl -k -X POST https://localhost:8443/vehicles/1/documents \
 ```
 
 Document status is `PENDING` or `RECEIVED`.
+Replace `1` with the id of an existing vehicle (see `GET /vehicles`).
 
 ## Tests
 
@@ -119,7 +124,7 @@ Only Caddy is exposed to the host. The API and the database are reachable only i
 
 ## API documentation
 
-Interactive documentation (Swagger UI) is available at `/swagger-ui/index.html` when the app runs locally.
+Interactive documentation (Swagger UI) is available at `/swagger-ui/index.html` (see "Run it" for the full address, or "Development" when running from an IDE).
 
 ![Swagger UI](docs/swagger-ui.png)
 
@@ -133,7 +138,7 @@ Interactive documentation (Swagger UI) is available at `/swagger-ui/index.html` 
 - [x] Database migrations (Flyway)
 - [x] Logging and database backups
 - [x] API documentation (Swagger UI)
-- [ ] Vehicle status and DTOs
+- [x] Vehicle status and DTOs
 - [ ] Consistent JSON error responses
 - [ ] Tests with their own database (Testcontainers)
 - [ ] Deployment on a Linux server with a reverse proxy and HTTPS

@@ -65,4 +65,26 @@ class VehicleApiTest {
                         .content("{\"id\":123456,\"brand\":\"Dacia\",\"model\":\"Sandero\",\"year\":2020,\"km\":41000,\"price\":11500}"))
                 .andExpect(status().isCreated());
     }
+    
+    @Test
+    void createdVehicleIsAvailableByDefault() throws Exception {
+        mockMvc.perform(post("/vehicles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_VEHICLE))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("AVAILABLE"));
+    }
+
+    @Test
+    void vehiclesCanBeFilteredByStatus() throws Exception {
+        mockMvc.perform(post("/vehicles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brand\":\"Dacia\",\"model\":\"Sandero\",\"year\":2020,\"km\":41000,\"price\":11500,\"status\":\"SOLD\"}"))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/vehicles").param("status", "SOLD"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isNotEmpty())
+                .andExpect(jsonPath("$[?(@.status != 'SOLD')]").isEmpty());
+    }
 }

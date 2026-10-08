@@ -15,48 +15,38 @@ class VehicleValidationTest {
     private final Validator validator =
             Validation.buildDefaultValidatorFactory().getValidator();
 
-    private Vehicle validVehicle() {
-        Vehicle v = new Vehicle();
-        v.setBrand("Dacia");
-        v.setModel("Sandero");
-        v.setYear(2020);
-        v.setKm(41000);
-        v.setPrice(11500);
-        return v;
+    private VehicleRequest request(String brand, String model, int year, int km, int price) {
+        return new VehicleRequest(brand, model, year, km, price, null);
     }
 
-    private Set<String> invalidFields(Vehicle v) {
-        return validator.validate(v).stream()
+    private Set<String> invalidFields(VehicleRequest r) {
+        return validator.validate(r).stream()
                 .map(violation -> violation.getPropertyPath().toString())
                 .collect(Collectors.toSet());
     }
 
     @Test
     void validVehicleHasNoViolations() {
-        assertThat(invalidFields(validVehicle())).isEmpty();
+        assertThat(invalidFields(request("Dacia", "Sandero", 2020, 41000, 11500))).isEmpty();
     }
 
     @Test
     void blankBrandIsRejected() {
-        Vehicle v = validVehicle();
-        v.setBrand("");
-
-        assertThat(invalidFields(v)).containsExactly("brand");
+        assertThat(invalidFields(request("", "Sandero", 2020, 41000, 11500)))
+                .containsExactly("brand");
     }
 
     @Test
     void negativeKmIsRejected() {
-        Vehicle v = validVehicle();
-        v.setKm(-5);
-
-        assertThat(invalidFields(v)).containsExactly("km");
+        assertThat(invalidFields(request("Dacia", "Sandero", 2020, -5, 11500)))
+                .containsExactly("km");
     }
 
     @Test
     void zeroPriceIsRejected() {
-        Vehicle v = validVehicle();
-        v.setPrice(0);
-
-        assertThat(invalidFields(v)).containsExactly("price");
+        assertThat(invalidFields(request("Dacia", "Sandero", 2020, 41000, 0)))
+                .containsExactly("price");
     }
+    
+    
 }

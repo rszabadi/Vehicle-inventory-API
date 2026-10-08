@@ -22,9 +22,9 @@ class VehicleControllerTest {
         vehicle.setBrand("Seat");
         when(repository.findById(1L)).thenReturn(Optional.of(vehicle));
 
-        Vehicle result = controller.get(1L);
+        VehicleResponse result = controller.get(1L);
 
-        assertThat(result.getBrand()).isEqualTo("Seat");
+        assertThat(result.brand()).isEqualTo("Seat");
     }
 
     @Test
