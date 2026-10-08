@@ -90,6 +90,20 @@ curl -k -X POST https://localhost:8443/vehicles/1/documents \
 Document status is `PENDING` or `RECEIVED`.
 Replace `1` with the id of an existing vehicle (see `GET /vehicles`).
 
+### Errors
+
+Errors use the standard problem format (RFC 9457). Validation errors list the invalid fields:
+
+```json
+{
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "Validation failed",
+  "instance": "/vehicles",
+  "errors": { "brand": "must not be blank", "km": "must be greater than or equal to 0" }
+}
+```
+
 ## Tests
 
 ```bash
@@ -139,6 +153,6 @@ Interactive documentation (Swagger UI) is available at `/swagger-ui/index.html` 
 - [x] Logging and database backups
 - [x] API documentation (Swagger UI)
 - [x] Vehicle status and DTOs
-- [ ] Consistent JSON error responses
+- [x] Consistent JSON error responses
 - [ ] Tests with their own database (Testcontainers)
 - [ ] Deployment on a Linux server with a reverse proxy and HTTPS

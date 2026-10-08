@@ -87,4 +87,32 @@ class VehicleApiTest {
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$[?(@.status != 'SOLD')]").isEmpty());
     }
+    
+    @Test
+    void invalidVehicleResponseNamesTheInvalidFields() throws Exception {
+        mockMvc.perform(post("/vehicles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(INVALID_VEHICLE))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Validation failed"))
+                .andExpect(jsonPath("$.errors.brand").exists())
+                .andExpect(jsonPath("$.errors.km").exists())
+                .andExpect(jsonPath("$.errors.price").exists());
+    }
+
+    @Test
+    void unknownStatusFilterReturns400WithDetail() throws Exception {
+        mockMvc.perform(get("/vehicles").param("status", "BANANA"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Invalid value for parameter 'status'"));
+    }
+
+    @Test
+    void unknownEnumValueInBodyReturns400WithDetail() throws Exception {
+        mockMvc.perform(post("/vehicles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brand\":\"Seat\",\"model\":\"Leon\",\"year\":2019,\"km\":1,\"price\":1,\"status\":\"BANANA\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").exists());
+    }
 }

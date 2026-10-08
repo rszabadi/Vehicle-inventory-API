@@ -78,7 +78,8 @@ class VehicleDocumentApiTest {
     @Test
     void documentsOfMissingVehicleReturn404() throws Exception {
         mockMvc.perform(get("/vehicles/999999/documents"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("Vehicle not found"));
     }
 
     @Test
