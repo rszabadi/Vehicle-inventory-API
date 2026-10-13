@@ -1,0 +1,3 @@
+basic_auth {
+    demo PASTE_THE_HASH_HERE
+}

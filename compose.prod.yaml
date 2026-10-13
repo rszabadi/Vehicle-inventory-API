@@ -1,0 +1,11 @@
+services:
+  caddy:
+    ports: !override
+      - "80:80"
+      - "443:443"
+    volumes: !override
+      - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - ./auth.caddy:/etc/caddy/auth.caddy:ro
+      - ./frontend:/srv/vehicles:ro
+      - caddy_data:/data
+      - caddy_config:/config
