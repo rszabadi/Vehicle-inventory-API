@@ -5,9 +5,8 @@ rmihai.com, www.rmihai.com {
 
 vehicles.rmihai.com {
     encode gzip
-    import /etc/caddy/auth.caddy
 
-    @api path /vehicles /vehicles/* /swagger-ui /swagger-ui/* /swagger-ui.html /v3/api-docs /v3/api-docs/*
+    @api path /vehicles /vehicles/* /swagger-ui /swagger-ui/* /swagger-ui.html /v3/api-docs /v3/api-docs/* /login /logout
     handle @api {
         reverse_proxy app:8080
     }

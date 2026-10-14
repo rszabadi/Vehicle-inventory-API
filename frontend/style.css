@@ -27,3 +27,4 @@ button[type="submit"] { background: var(--accent); color: #fff; border-color: va
 dialog { background: var(--card); color: var(--fg); border: 1px solid var(--line);
          border-radius: 10px; min-width: min(34rem, 90vw); }
 dialog li { margin: .4rem 0; }
+header nav { display: flex; gap: 1rem; align-items: center; }

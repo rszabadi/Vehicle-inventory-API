@@ -154,11 +154,11 @@ Interactive documentation (Swagger UI) is available at `/swagger-ui/index.html` 
 The stack runs on a Linux machine with Docker Compose behind Caddy, which obtains and renews HTTPS certificates automatically. Production adds an override file:
 
 ```bash
-cp auth.caddy.example auth.caddy   # then put your own password hash in it (caddy hash-password)
+cp .env.example .env     # set DB_PASSWORD and a long random APP_ADMIN_PASSWORD (12+ characters)
 docker compose -f compose.yaml -f compose.prod.yaml up -d --build
 ```
 
-`Caddyfile.prod` contains the domain names (here `vehicles.rmihai.com`), so change them for your own domain. The live demo is password-protected: ask me for access.
+The app has its own login (Spring Security). The admin user comes from `APP_ADMIN_USER` and `APP_ADMIN_PASSWORD` in `.env`; with a shorter password, nobody can log in.
 
 ## Roadmap
 
@@ -175,5 +175,5 @@ docker compose -f compose.yaml -f compose.prod.yaml up -d --build
 - [x] Small web front-end served by Caddy
 - [ ] Tests with their own database (Testcontainers)
 - [x] Deployment with a reverse proxy and HTTPS (on my own machine for now)
-- [ ] Proper login (Spring Security) instead of the Caddy password
+- [x] Proper login (Spring Security) instead of the Caddy password
 - [ ] Move to a dedicated Ubuntu server

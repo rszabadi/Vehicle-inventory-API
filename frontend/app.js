@@ -22,30 +22,27 @@ function show(element, text, isError = false) {
   element.classList.toggle("error", isError);
 }
 
-// Calls the API and turns error responses (problem format) into readable messages.
+function csrfToken() {
+  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
+// Calls the API. Changes (POST/PUT/DELETE) carry the CSRF token; a 401 sends you to the login page.
 async function api(path, options = {}) {
-  const response = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
+  const method = (options.method || "GET").toUpperCase();
+  const headers = { "Content-Type": "application/json", "Accept": "application/json" };
+  if (method !== "GET") {
+    headers["X-XSRF-TOKEN"] = csrfToken();
+  }
+  const response = await fetch(path, { ...options, headers });
+  if (response.status === 401) {
+    window.location.href = "/login";
+    throw new Error("Please log in.");
+  }
   if (!response.ok) {
     throw new Error(await errorText(response));
   }
   return response.status === 204 ? null : response.json();
-}
-
-async function errorText(response) {
-  try {
-    const problem = await response.json();
-    if (problem.errors) {
-      return Object.entries(problem.errors)
-        .map(([field, reason]) => `${field}: ${reason}`)
-        .join(", ");
-    }
-    return problem.detail || problem.title || `Error ${response.status}`;
-  } catch {
-    return `Error ${response.status}`;
-  }
 }
 
 // Text is always set with textContent, never innerHTML, so data from the API
@@ -246,5 +243,10 @@ filter.addEventListener("change", () => {
   loadVehicles();
 });
 document.getElementById("docs-close").addEventListener("click", () => dialog.close());
+
+document.getElementById("logout").addEventListener("click", async () => {
+  await fetch("/logout", { method: "POST", headers: { "X-XSRF-TOKEN": csrfToken() } });
+  window.location.href = "/login";
+});
 
 loadVehicles();
