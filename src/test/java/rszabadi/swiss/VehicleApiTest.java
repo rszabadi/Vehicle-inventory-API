@@ -9,23 +9,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
-@AutoConfigureMockMvc
 @Transactional
-class VehicleApiTest {
+class VehicleApiTest extends SecuredApiTest {
 
     private static final String VALID_VEHICLE =
             "{\"brand\":\"Dacia\",\"model\":\"Sandero\",\"year\":2020,\"km\":41000,\"price\":11500}";
     private static final String INVALID_VEHICLE =
             "{\"brand\":\"\",\"model\":\"Clio\",\"year\":2018,\"km\":-5,\"price\":0}";
 
-    @Autowired
-    private MockMvc mockMvc;
 
     @Test
     void createVehicleReturns201AndTheSavedVehicle() throws Exception {

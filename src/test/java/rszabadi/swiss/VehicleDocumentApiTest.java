@@ -10,21 +10,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
-@AutoConfigureMockMvc
 @Transactional
-class VehicleDocumentApiTest {
+class VehicleDocumentApiTest extends SecuredApiTest {
 
     private static final MediaType JSON = MediaType.APPLICATION_JSON;
     private static final String ITV = "{\"type\":\"ITV_CERTIFICATE\",\"expiresOn\":\"2027-03-15\"}";
 
-    @Autowired
-    private MockMvc mockMvc;
     @Autowired
     private VehicleRepository vehicleRepository;
     @Autowired
