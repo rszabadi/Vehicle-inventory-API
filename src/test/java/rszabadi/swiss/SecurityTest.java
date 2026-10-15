@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -81,5 +83,19 @@ class SecurityTest {
         mockMvc.perform(formLogin().user("tester").password("wrong-password-here"))
                 .andExpect(unauthenticated())
                 .andExpect(redirectedUrl("/login?error"));
+    }
+    
+    @Test
+    void loginPageContainsFormAndCsrfToken() throws Exception {
+        mockMvc.perform(get("/login"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("name=\"_csrf\"")))
+                .andExpect(content().string(containsString("name=\"password\"")));
+    }
+
+    @Test
+    void loginPageShowsErrorMessage() throws Exception {
+        mockMvc.perform(get("/login").param("error", ""))
+                .andExpect(content().string(containsString("Invalid username or password")));
     }
 }

@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/error").permitAll()
                         .anyRequest().authenticated())
-                .formLogin(form -> form.defaultSuccessUrl("/"))
+                .formLogin(form -> form.loginPage("/login").defaultSuccessUrl("/"))
                 .logout(logout -> logout.logoutSuccessUrl("/login?logout"))
                 .exceptionHandling(ex -> ex.defaultAuthenticationEntryPointFor(
                         new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),

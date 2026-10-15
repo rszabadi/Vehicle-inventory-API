@@ -3,23 +3,63 @@
 const STATUSES = ["AVAILABLE", "RESERVED", "SOLD"];
 const DOC_TYPES = ["TECHNICAL_SHEET", "REGISTRATION_PERMIT", "ITV_CERTIFICATE", "SALES_CONTRACT"];
 
+const euro = new Intl.NumberFormat("es-ES", {
+  style: "currency", currency: "EUR", maximumFractionDigits: 0, useGrouping: "always",
+});
+const number = new Intl.NumberFormat("es-ES", { useGrouping: "always" });
+
 const tbody = document.getElementById("vehicles");
-const filter = document.getElementById("filter");
 const message = document.getElementById("message");
+const emptyState = document.getElementById("empty");
+const searchBox = document.getElementById("search");
 const addForm = document.getElementById("add-form");
 const dialog = document.getElementById("docs-dialog");
 const docsList = document.getElementById("docs-list");
 const docsMessage = document.getElementById("docs-message");
 const docForm = document.getElementById("doc-form");
 const docType = document.getElementById("doc-type");
+const chips = document.querySelectorAll("[data-filter]");
+const sortButtons = document.querySelectorAll("[data-sort]");
 
-let currentVehicle = null;
+let vehicles = [];            // everything the API returned
+let statusFilter = "";        // "" means all
+let sort = { key: "id", dir: "desc" };   // newest first by default
+let currentVehicle = null;    // the vehicle whose documents are open
 
 // ---------- helpers ----------
 
 function show(element, text, isError = false) {
   element.textContent = text;
   element.classList.toggle("error", isError);
+}
+
+// Text is always set with textContent, never innerHTML, so data from the API
+// can never be interpreted as HTML (protects against XSS).
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function button(label, onClick, className) {
+  const b = el("button", className, label);
+  b.type = "button";
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+// TECHNICAL_SHEET -> "Technical sheet"
+function pretty(value) {
+  const words = value.toLowerCase().replaceAll("_", " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+// A stable colour for each brand, so the same brand always looks the same.
+function hueFor(text) {
+  let hash = 0;
+  for (const char of text.toLowerCase()) hash = (hash * 31 + char.charCodeAt(0)) % 360;
+  return hash;
 }
 
 function csrfToken() {
@@ -45,65 +85,131 @@ async function api(path, options = {}) {
   return response.status === 204 ? null : response.json();
 }
 
-// Text is always set with textContent, never innerHTML, so data from the API
-// can never be interpreted as HTML (protects against XSS).
-function cell(text) {
-  const td = document.createElement("td");
-  td.textContent = text;
-  return td;
-}
-
-function button(label, onClick) {
-  const b = document.createElement("button");
-  b.type = "button";
-  b.textContent = label;
-  b.addEventListener("click", onClick);
-  return b;
-}
-
-function select(options, current, onChange) {
-  const s = document.createElement("select");
-  for (const value of options) {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = value;
-    option.selected = value === current;
-    s.append(option);
-  }
-  s.addEventListener("change", () => onChange(s.value));
-  return s;
-}
-
-// ---------- vehicles ----------
-
-async function loadVehicles() {
+async function errorText(response) {
   try {
-    const query = filter.value ? `?status=${encodeURIComponent(filter.value)}` : "";
-    const vehicles = await api(`/vehicles${query}`);
-    tbody.replaceChildren(...vehicles.map(vehicleRow));
-    if (vehicles.length === 0) {
-      show(message, "No vehicles found.");
+    const problem = await response.json();
+    if (problem.errors) {
+      return Object.entries(problem.errors)
+        .map(([field, reason]) => `${field}: ${reason}`)
+        .join(", ");
     }
-  } catch (e) {
-    show(message, e.message, true);
+    return problem.detail || problem.title || `Error ${response.status}`;
+  } catch {
+    return `Error ${response.status}`;
   }
+}
+
+// ---------- vehicles: sorting, filtering, drawing ----------
+
+const sorters = {
+  id: (a, b) => a.id - b.id,
+  brand: (a, b) => a.brand.localeCompare(b.brand, "es") || a.model.localeCompare(b.model, "es"),
+  year: (a, b) => a.year - b.year,
+  km: (a, b) => a.km - b.km,
+  price: (a, b) => a.price - b.price,
+  status: (a, b) => STATUSES.indexOf(a.status) - STATUSES.indexOf(b.status),
+};
+
+function visibleVehicles() {
+  const text = searchBox.value.trim().toLowerCase();
+  const direction = sort.dir === "asc" ? 1 : -1;
+  return vehicles
+    .filter((v) => !statusFilter || v.status === statusFilter)
+    .filter((v) => !text || `${v.brand} ${v.model}`.toLowerCase().includes(text))
+    .sort((a, b) => sorters[sort.key](a, b) * direction);
+}
+
+function render() {
+  const rows = visibleVehicles();
+  tbody.replaceChildren(...rows.map(vehicleRow));
+
+  emptyState.hidden = rows.length > 0;
+  emptyState.textContent = vehicles.length === 0
+    ? "The lot is empty. Add your first vehicle below."
+    : "No vehicles match.";
+
+  renderSummary();
+  renderSortIndicators();
+}
+
+function renderSummary() {
+  document.getElementById("count-all").textContent = vehicles.length;
+  for (const status of STATUSES) {
+    document.getElementById(`count-${status}`).textContent =
+      vehicles.filter((v) => v.status === status).length;
+  }
+  const stock = vehicles
+    .filter((v) => v.status === "AVAILABLE")
+    .reduce((sum, v) => sum + v.price, 0);
+  document.getElementById("stock-value").textContent = euro.format(stock);
+
+  chips.forEach((chip) =>
+    chip.setAttribute("aria-pressed", String(chip.dataset.filter === statusFilter)));
+}
+
+function renderSortIndicators() {
+  sortButtons.forEach((b) => {
+    const direction = sort.dir === "asc" ? "ascending" : "descending";
+    b.closest("th").setAttribute("aria-sort", b.dataset.sort === sort.key ? direction : "none");
+  });
 }
 
 function vehicleRow(v) {
-  const tr = document.createElement("tr");
-  tr.append(cell(v.brand), cell(v.model), cell(v.year), cell(v.km), cell(v.price));
+  const tr = el("tr");
 
-  const statusCell = document.createElement("td");
-  statusCell.append(select(STATUSES, v.status, (status) => changeStatus(v, status)));
+  const mono = el("span", "mono", v.brand.charAt(0).toUpperCase());
+  mono.style.setProperty("--h", hueFor(v.brand));
+  const name = el("span", "car-name");
+  name.append(el("strong", "", v.brand), el("span", "model", v.model));
+  const car = el("div", "car");
+  car.append(mono, name);
+  const carCell = el("td");
+  carCell.append(car);
 
-  const actions = document.createElement("td");
+  const statusCell = el("td");
+  statusCell.append(statusSelect(v));
+
+  const actions = el("td", "actions");
   actions.append(
     button("Documents", () => openDocuments(v)),
-    button("Delete", () => removeVehicle(v)),
+    button("Delete", () => removeVehicle(v), "danger"),
   );
 
-  tr.append(statusCell, actions);
+  tr.append(
+    carCell,
+    el("td", "num", v.year),
+    el("td", "num", number.format(v.km)),
+    el("td", "num price", euro.format(v.price)),
+    statusCell,
+    actions,
+  );
   return tr;
+}
+
+function statusSelect(v) {
+  const select = el("select", "status");
+  select.setAttribute("aria-label", `Status of ${v.brand} ${v.model}`);
+  for (const value of STATUSES) {
+    const option = el("option", "", pretty(value));
+    option.value = value;
+    option.selected = value === v.status;
+    select.append(option);
+  }
+  select.dataset.value = v.status;
+  select.addEventListener("change", () => {
+    select.dataset.value = select.value;
+    changeStatus(v, select.value);
+  });
+  return select;
+}
+
+async function loadVehicles() {
+  try {
+    vehicles = await api("/vehicles");
+    render();
+  } catch (e) {
+    show(message, e.message, true);
+  }
 }
 
 async function changeStatus(v, status) {
@@ -115,7 +221,7 @@ async function changeStatus(v, status) {
         brand: v.brand, model: v.model, year: v.year, km: v.km, price: v.price, status,
       }),
     });
-    show(message, `Vehicle ${v.id} is now ${status}.`);
+    show(message, `${v.brand} ${v.model} is now ${pretty(status).toLowerCase()}.`);
   } catch (e) {
     show(message, e.message, true);
   }
@@ -146,12 +252,26 @@ addForm.addEventListener("submit", async (event) => {
   try {
     await api("/vehicles", { method: "POST", body: JSON.stringify(body) });
     addForm.reset();
+    addForm.elements.brand.focus();
     show(message, "Vehicle added.");
     loadVehicles();
   } catch (e) {
     show(message, e.message, true);
   }
 });
+
+chips.forEach((chip) => chip.addEventListener("click", () => {
+  statusFilter = chip.dataset.filter;
+  render();
+}));
+
+sortButtons.forEach((b) => b.addEventListener("click", () => {
+  const key = b.dataset.sort;
+  sort = { key, dir: sort.key === key && sort.dir === "asc" ? "desc" : "asc" };
+  render();
+}));
+
+searchBox.addEventListener("input", render);
 
 // ---------- documents ----------
 
@@ -168,8 +288,8 @@ async function loadDocuments() {
     const docs = await api(`/vehicles/${currentVehicle.id}/documents`);
     docsList.replaceChildren(...docs.map(docItem));
     if (docs.length === 0) {
-      const li = document.createElement("li");
-      li.textContent = "No documents yet.";
+      const li = el("li");
+      li.append(el("span", "doc-meta", "No documents yet."));
       docsList.append(li);
     }
   } catch (e) {
@@ -178,15 +298,19 @@ async function loadDocuments() {
 }
 
 function docItem(d) {
-  const li = document.createElement("li");
-  const expires = d.expiresOn ? `, expires ${d.expiresOn}` : "";
-  const label = document.createElement("span");
-  label.textContent = `${d.type} (${d.status}${expires}) `;
-  li.append(label);
+  const li = el("li");
+  li.append(
+    el("span", "doc-name", pretty(d.type)),
+    el("span", `tag tag-${d.status}`, pretty(d.status)),
+  );
+  if (d.expiresOn) li.append(el("span", "doc-meta", `expires ${d.expiresOn}`));
+
+  const actions = el("span", "spacer");
   if (d.status === "PENDING") {
-    li.append(button("Mark received", () => markReceived(d)));
+    actions.append(button("Mark received", () => markReceived(d)));
   }
-  li.append(button("Delete", () => removeDocument(d)));
+  actions.append(button("Delete", () => removeDocument(d), "danger"));
+  li.append(actions);
   return li;
 }
 
@@ -232,21 +356,16 @@ docForm.addEventListener("submit", async (event) => {
 // ---------- start ----------
 
 for (const type of DOC_TYPES) {
-  const option = document.createElement("option");
+  const option = el("option", "", pretty(type));
   option.value = type;
-  option.textContent = type;
   docType.append(option);
 }
 
-filter.addEventListener("change", () => {
-  show(message, "");
-  loadVehicles();
-});
 document.getElementById("docs-close").addEventListener("click", () => dialog.close());
 
 document.getElementById("logout").addEventListener("click", async () => {
   await fetch("/logout", { method: "POST", headers: { "X-XSRF-TOKEN": csrfToken() } });
-  window.location.href = "/login";
+  window.location.href = "/login?logout";
 });
 
 loadVehicles();
