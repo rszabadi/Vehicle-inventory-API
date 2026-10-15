@@ -54,6 +54,7 @@ Stop it with `docker compose down`. The database data is kept in a Docker volume
 A small front-end (plain HTML, CSS and JavaScript, no framework) is served by Caddy at `https://localhost:8443`. It lists vehicles with a status filter, adds, updates and deletes them, and manages each vehicle's document checklist.
 
 ![Web interface](docs/frontend.png)
+![Login page](docs/login.png)
 
 ## API
 
