@@ -7,10 +7,13 @@ public record VehicleResponse(
         int year,
         int km,
         int price,
-        VehicleStatus status) {
+        VehicleStatus status,
+        int documentsReceived,
+        int documentsTotal) {
 
-    public static VehicleResponse from(Vehicle v) {
+    public static VehicleResponse from(Vehicle v, int documentsReceived) {
         return new VehicleResponse(v.getId(), v.getBrand(), v.getModel(),
-                v.getYear(), v.getKm(), v.getPrice(), v.getStatus());
+                v.getYear(), v.getKm(), v.getPrice(), v.getStatus(),
+                documentsReceived, DocumentType.values().length);
     }
 }

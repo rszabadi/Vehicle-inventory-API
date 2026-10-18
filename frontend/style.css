@@ -160,7 +160,7 @@ main { max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
 /* ---------- table ---------- */
 
 .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
-table { width: 100%; min-width: 44rem; border-collapse: collapse; }
+table { width: 100%; min-width: 52rem; border-collapse: collapse; }
 
 thead th { padding: 0; background: var(--surface-2); border-bottom: 2px solid var(--ink); text-align: left; }
 thead th button {
@@ -275,3 +275,19 @@ input, select { width: 100%; min-width: 0; }
 .grid-form > label { min-width: 0; }
 select.status { width: auto; }
 #doc-form input, #doc-form select { width: auto; flex: 1 1 10rem; }
+
+
+
+
+
+
+/* documents column */
+button.docs-link {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .35rem .5rem; background: transparent; border-color: transparent;
+}
+button.docs-link:hover { background: var(--surface-2); color: var(--ink); border-color: var(--line); }
+.meter { display: flex; gap: 3px; }
+.seg { width: .7rem; height: 1.15rem; border-radius: 2px; background: var(--line); }
+.seg.on { background: var(--available); }
+.docs-count { min-width: 2.2rem; text-align: left; font: 600 1.05rem/1 var(--font-display); font-variant-numeric: tabular-nums; }

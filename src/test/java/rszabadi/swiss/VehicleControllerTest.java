@@ -12,10 +12,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 class VehicleControllerTest {
-
+	
     private final VehicleRepository repository = mock(VehicleRepository.class);
-    private final VehicleController controller = new VehicleController(repository);
-
+    private final VehicleDocumentRepository documents = mock(VehicleDocumentRepository.class);
+    private final VehicleController controller = new VehicleController(repository, documents);
     @Test
     void getReturnsVehicleWhenItExists() {
         Vehicle vehicle = new Vehicle();

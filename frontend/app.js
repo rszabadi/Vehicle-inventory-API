@@ -108,6 +108,7 @@ const sorters = {
   km: (a, b) => a.km - b.km,
   price: (a, b) => a.price - b.price,
   status: (a, b) => STATUSES.indexOf(a.status) - STATUSES.indexOf(b.status),
+  documents: (a, b) => a.documentsReceived - b.documentsReceived,
 };
 
 function visibleVehicles() {
@@ -169,11 +170,19 @@ function vehicleRow(v) {
   const statusCell = el("td");
   statusCell.append(statusSelect(v));
 
+  const meter = el("span", "meter");
+  for (let i = 0; i < v.documentsTotal; i++) {
+    meter.append(el("span", i < v.documentsReceived ? "seg on" : "seg"));
+  }
+  const docsButton = button("", () => openDocuments(v), "docs-link");
+  docsButton.setAttribute("aria-label",
+    `${v.documentsReceived} of ${v.documentsTotal} documents received for ${v.brand} ${v.model}. Open documents`);
+  docsButton.append(meter, el("span", "docs-count", `${v.documentsReceived}/${v.documentsTotal}`));
+  const docsCell = el("td");
+  docsCell.append(docsButton);
+
   const actions = el("td", "actions");
-  actions.append(
-    button("Documents", () => openDocuments(v)),
-    button("Delete", () => removeVehicle(v), "danger"),
-  );
+  actions.append(button("Delete", () => removeVehicle(v), "danger"));
 
   tr.append(
     carCell,
@@ -181,6 +190,7 @@ function vehicleRow(v) {
     el("td", "num", number.format(v.km)),
     el("td", "num price", euro.format(v.price)),
     statusCell,
+    docsCell,
     actions,
   );
   return tr;
@@ -367,5 +377,7 @@ document.getElementById("logout").addEventListener("click", async () => {
   await fetch("/logout", { method: "POST", headers: { "X-XSRF-TOKEN": csrfToken() } });
   window.location.href = "/login?logout";
 });
+
+dialog.addEventListener("close", loadVehicles);
 
 loadVehicles();

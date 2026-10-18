@@ -1,6 +1,8 @@
 package rszabadi.swiss;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,16 +25,21 @@ import jakarta.validation.Valid;
 public class VehicleController {
 
     private final VehicleRepository repository;
+    private final VehicleDocumentRepository documents;
 
-    public VehicleController(VehicleRepository repository) {
+    public VehicleController(VehicleRepository repository, VehicleDocumentRepository documents) {
         this.repository = repository;
+        this.documents = documents;
     }
 
     @Operation(summary = "List vehicles, optionally filtered by status")
     @GetMapping("/vehicles")
     public List<VehicleResponse> list(@RequestParam(required = false) VehicleStatus status) {
-        List<Vehicle> vehicles = (status == null) ? repository.findAll() : repository.findByStatus(status);
-        return vehicles.stream().map(VehicleResponse::from).toList();
+        List<Vehicle> found = (status == null) ? repository.findAll() : repository.findByStatus(status);
+        Map<Long, Integer> received = receivedCounts();
+        return found.stream()
+                .map(v -> VehicleResponse.from(v, received.getOrDefault(v.getId(), 0)))
+                .toList();
     }
 
     @Operation(summary = "Create a vehicle")
@@ -41,13 +48,13 @@ public class VehicleController {
     public VehicleResponse create(@Valid @RequestBody VehicleRequest request) {
         Vehicle vehicle = new Vehicle();
         apply(vehicle, request);
-        return VehicleResponse.from(repository.save(vehicle));
+        return response(repository.save(vehicle));
     }
 
     @Operation(summary = "Get a vehicle by id")
     @GetMapping("/vehicles/{id}")
     public VehicleResponse get(@PathVariable Long id) {
-        return VehicleResponse.from(find(id));
+        return response(find(id));
     }
 
     @Operation(summary = "Update a vehicle")
@@ -55,7 +62,7 @@ public class VehicleController {
     public VehicleResponse update(@PathVariable Long id, @Valid @RequestBody VehicleRequest request) {
         Vehicle vehicle = find(id);
         apply(vehicle, request);
-        return VehicleResponse.from(repository.save(vehicle));
+        return response(repository.save(vehicle));
     }
 
     @Operation(summary = "Delete a vehicle")
@@ -71,6 +78,18 @@ public class VehicleController {
     private Vehicle find(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    private VehicleResponse response(Vehicle vehicle) {
+        int received = (int) documents.countByVehicleIdAndStatus(vehicle.getId(), DocumentStatus.RECEIVED);
+        return VehicleResponse.from(vehicle, received);
+    }
+
+    private Map<Long, Integer> receivedCounts() {
+        return documents.countPerVehicle(DocumentStatus.RECEIVED).stream()
+                .collect(Collectors.toMap(
+                        VehicleDocumentRepository.ReceivedCount::getVehicleId,
+                        c -> c.getReceived().intValue()));
     }
 
     private void apply(Vehicle vehicle, VehicleRequest request) {
