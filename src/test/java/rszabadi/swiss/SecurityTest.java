@@ -1,5 +1,6 @@
 package rszabadi.swiss;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -8,10 +9,9 @@ import static org.springframework.security.test.web.servlet.response.SecurityMoc
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.hamcrest.Matchers.containsString;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -97,5 +99,42 @@ class SecurityTest {
     void loginPageShowsErrorMessage() throws Exception {
         mockMvc.perform(get("/login").param("error", ""))
                 .andExpect(content().string(containsString("Invalid username or password")));
+    }
+    private static RequestPostProcessor fromAddress(String address) {
+        return request -> {
+            request.setRemoteAddr(address);
+            return request;
+        };
+    }
+
+    private MockHttpServletRequestBuilder login(String password, String address) {
+        return post("/login").with(csrf()).with(fromAddress(address))
+                .param("username", "tester").param("password", password);
+    }
+
+    @Test
+    void tooManyWrongPasswordsLockLoginForThatAddress() throws Exception {
+        for (int i = 0; i < LoginAttemptLimiter.MAX_FAILURES; i++) {
+            mockMvc.perform(login("wrong-password-here", "10.20.30.40"))
+                    .andExpect(redirectedUrl("/login?error"));
+        }
+        mockMvc.perform(login("correct-horse-battery", "10.20.30.40"))
+                .andExpect(redirectedUrl("/login?locked"))
+                .andExpect(unauthenticated());
+    }
+
+    @Test
+    void aLockDoesNotAffectOtherAddresses() throws Exception {
+        for (int i = 0; i < LoginAttemptLimiter.MAX_FAILURES; i++) {
+            mockMvc.perform(login("wrong-password-here", "10.20.30.41"));
+        }
+        mockMvc.perform(login("correct-horse-battery", "10.20.30.42"))
+                .andExpect(authenticated().withUsername("tester"));
+    }
+
+    @Test
+    void loginPageShowsLockedMessage() throws Exception {
+        mockMvc.perform(get("/login").param("locked", ""))
+                .andExpect(content().string(containsString("Too many failed attempts")));
     }
 }

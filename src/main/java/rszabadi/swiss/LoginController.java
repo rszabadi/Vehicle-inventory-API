@@ -14,9 +14,12 @@ public class LoginController {
     @ResponseBody
     public String loginPage(CsrfToken csrf,
             @RequestParam(required = false) String error,
-            @RequestParam(required = false) String logout) {
+            @RequestParam(required = false) String logout,
+            @RequestParam(required = false) String locked) {
         String message = "";
-        if (error != null) {
+        if (locked != null) {
+            message = "<p class=\"notice error\" role=\"alert\">Too many failed attempts. Try again in 15 minutes.</p>";
+        } else if (error != null) {
             message = "<p class=\"notice error\" role=\"alert\">Invalid username or password.</p>";
         } else if (logout != null) {
             message = "<p class=\"notice\" role=\"status\">You have been logged out.</p>";
