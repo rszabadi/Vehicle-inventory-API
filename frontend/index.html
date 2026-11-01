@@ -16,6 +16,7 @@
         <span class="brand-name">Vehicle Inventory</span>
       </a>
       <nav>
+        <span id="who" class="who"></span>
         <a href="/swagger-ui/index.html">API docs</a>
         <button id="logout" type="button" class="ghost">Log out</button>
       </nav>
@@ -71,7 +72,7 @@
       <p id="empty" class="empty" hidden></p>
     </div>
 
-    <section class="panel">
+    <section class="panel" id="add-section">
       <h2>Add a vehicle</h2>
       <form id="add-form" class="grid-form">
         <label>Brand <input name="brand" required></label>

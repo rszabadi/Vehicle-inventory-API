@@ -11,6 +11,10 @@ A REST API and a small web interface for managing a used-car dealer's vehicle in
 
 ![Web interface](docs/frontend.png)
 
+## Live demo
+
+[vehicles.rmihai.com](https://vehicles.rmihai.com) has a read-only demo login: user `demo`, password `demo1234`. It only holds sample data, and the demo user can look at everything but change nothing (the server enforces this, and the tests check it). The demo runs on my own hardware and may be offline sometimes.
+
 ## Features
 
 - Vehicles with a status (`AVAILABLE`, `RESERVED`, `SOLD`), filtering by status, input validation and consistent error responses (RFC 9457).
@@ -55,6 +59,8 @@ All settings come from the `.env` file, which is never committed.
 | `DB_NAME`, `DB_USER`, `DB_PASSWORD` | PostgreSQL database and credentials |
 | `APP_ADMIN_USER` | Username of the admin login (default `admin`) |
 | `APP_ADMIN_PASSWORD` | Password of the admin login: at least 12 characters, otherwise nobody can log in |
+| `APP_VIEWER_USER` | Username of the read-only demo login (default `demo`) |
+| `APP_VIEWER_PASSWORD` | Password of the demo login. Leave it empty to switch the demo login off |
 
 Generate a strong password with `openssl rand -base64 18`.
 
@@ -154,7 +160,7 @@ Interactive documentation (Swagger UI, login required) is available at `/swagger
 - Swagger UI and the API documentation are behind the login.
 - The static pages are served with a Content Security Policy.
 - Only Caddy is exposed. The database port is bound to localhost, and the app container runs as a non-root user.
-- This is a single-user setup for a demo. A user table with roles would be the next step for a multi-user system.
+- Two roles: ADMIN can change data, VIEWER is read-only (enforced on the server, not just hidden in the page).
 
 ## Tests
 

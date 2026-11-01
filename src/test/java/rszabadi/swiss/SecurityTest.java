@@ -12,6 +12,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +28,9 @@ import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(properties = {
         "app.admin.user=tester",
-        "app.admin.password=correct-horse-battery" })
+        "app.admin.password=correct-horse-battery",
+        "app.viewer.user=viewer",
+        "app.viewer.password=view-only" })
 class SecurityTest {
 
     @Autowired
@@ -56,7 +60,7 @@ class SecurityTest {
 
     @Test
     void writingWithoutCsrfTokenIsRejected() throws Exception {
-        mockMvc.perform(post("/vehicles").with(user("tester"))
+        mockMvc.perform(post("/vehicles").with(user("tester").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
     }
@@ -136,5 +140,43 @@ class SecurityTest {
     void loginPageShowsLockedMessage() throws Exception {
         mockMvc.perform(get("/login").param("locked", ""))
                 .andExpect(content().string(containsString("Too many failed attempts")));
+    }
+    @Test
+    void viewerCanReadVehicles() throws Exception {
+        mockMvc.perform(get("/vehicles").with(user("viewer").roles("VIEWER")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void viewerCannotCreateVehicles() throws Exception {
+        mockMvc.perform(post("/vehicles").with(user("viewer").roles("VIEWER")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"brand\":\"Seat\",\"model\":\"Leon\",\"year\":2019,\"km\":1,\"price\":1}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void viewerCannotDeleteVehicles() throws Exception {
+        mockMvc.perform(delete("/vehicles/1").with(user("viewer").roles("VIEWER")).with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void viewerCanLogIn() throws Exception {
+        mockMvc.perform(formLogin().user("viewer").password("view-only"))
+                .andExpect(authenticated().withRoles("VIEWER"));
+    }
+
+    @Test
+    void meReportsThatAViewerCannotEdit() throws Exception {
+        mockMvc.perform(get("/me").with(user("viewer").roles("VIEWER")))
+                .andExpect(jsonPath("$.username").value("viewer"))
+                .andExpect(jsonPath("$.canEdit").value(false));
+    }
+
+    @Test
+    void meReportsThatAnAdminCanEdit() throws Exception {
+        mockMvc.perform(get("/me").with(user("tester").roles("ADMIN")))
+                .andExpect(jsonPath("$.canEdit").value(true));
     }
 }

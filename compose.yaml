@@ -33,6 +33,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       APP_ADMIN_USER: ${APP_ADMIN_USER:-admin}
       APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD:?set APP_ADMIN_PASSWORD in .env}
+      APP_VIEWER_USER: ${APP_VIEWER_USER:-demo}
+      APP_VIEWER_PASSWORD: ${APP_VIEWER_PASSWORD:-}
     logging:
       driver: json-file
       options:

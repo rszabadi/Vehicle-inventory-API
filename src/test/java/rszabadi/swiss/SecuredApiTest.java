@@ -22,7 +22,7 @@ abstract class SecuredApiTest {
     void setUpMockMvc() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
                 .apply(springSecurity())
-                .defaultRequest(get("/").with(user("tester")).with(csrf()))
+                .defaultRequest(get("/").with(user("tester").roles("ADMIN")).with(csrf()))
                 .build();
     }
 }

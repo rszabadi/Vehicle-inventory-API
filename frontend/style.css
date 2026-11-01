@@ -291,3 +291,7 @@ button.docs-link:hover { background: var(--surface-2); color: var(--ink); border
 .seg { width: .7rem; height: 1.15rem; border-radius: 2px; background: var(--line); }
 .seg.on { background: var(--available); }
 .docs-count { min-width: 2.2rem; text-align: left; font: 600 1.05rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+
+
+.who { font-size: .9rem; opacity: .85; }
+select.status:disabled { cursor: default; opacity: 1; }

@@ -25,6 +25,7 @@ let vehicles = [];            // everything the API returned
 let statusFilter = "";        // "" means all
 let sort = { key: "id", dir: "desc" };   // newest first by default
 let currentVehicle = null;    // the vehicle whose documents are open
+let canEdit = true;           // false for the read-only demo user
 
 // ---------- helpers ----------
 
@@ -181,8 +182,11 @@ function vehicleRow(v) {
   const docsCell = el("td");
   docsCell.append(docsButton);
 
+
   const actions = el("td", "actions");
-  actions.append(button("Delete", () => removeVehicle(v), "danger"));
+  if (canEdit) {
+    actions.append(button("Delete", () => removeVehicle(v), "danger"));
+  }
 
   tr.append(
     carCell,
@@ -210,6 +214,7 @@ function statusSelect(v) {
     select.dataset.value = select.value;
     changeStatus(v, select.value);
   });
+  select.disabled = !canEdit;
   return select;
 }
 
@@ -315,13 +320,16 @@ function docItem(d) {
   );
   if (d.expiresOn) li.append(el("span", "doc-meta", `expires ${d.expiresOn}`));
 
-  const actions = el("span", "spacer");
-  if (d.status === "PENDING") {
-    actions.append(button("Mark received", () => markReceived(d)));
+  if (canEdit) {
+    const actions = el("span", "spacer");
+    if (d.status === "PENDING") {
+      actions.append(button("Mark received", () => markReceived(d)));
+    }
+    actions.append(button("Delete", () => removeDocument(d), "danger"));
+    li.append(actions);
   }
-  actions.append(button("Delete", () => removeDocument(d), "danger"));
-  li.append(actions);
   return li;
+
 }
 
 async function markReceived(d) {
@@ -380,4 +388,18 @@ document.getElementById("logout").addEventListener("click", async () => {
 
 dialog.addEventListener("close", loadVehicles);
 
-loadVehicles();
+async function start() {
+  try {
+    const me = await api("/me");
+    canEdit = me.canEdit;
+    document.getElementById("who").textContent = canEdit ? me.username : `${me.username} (read-only)`;
+    document.getElementById("add-section").hidden = !canEdit;
+    document.getElementById("doc-form").hidden = !canEdit;
+  } catch (e) {
+    show(message, e.message, true);
+    return;
+  }
+  loadVehicles();
+}
+
+start();
